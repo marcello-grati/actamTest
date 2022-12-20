@@ -162,7 +162,7 @@ function writeMusic () {
         for (let i=0; i<measures; i++) {
             let tempo_left = 16;
             let counter = 0;
-            let old_note = 0;
+            let old_note = null;
             let duration;
             let note;
             let time
@@ -170,19 +170,49 @@ function writeMusic () {
             while (tempo_left > 0) {
 
                 if (counter === 0) {
-                    duration = input[first_rythm_index1 + k*32 + i*16 + counter] % 3 + 2;
+                    duration = input[first_rythm_index1 + k*32 + i*16 + counter] % 2 + 3;
                     //duration = 4; // test
                     note = simple_progression[i][input[first_note_index1 + k*32 + i*16 + counter] % num_of_chord_notes];
 
                 } else {
-                    duration = input[first_rythm_index1 + k*32 + i*16 + counter] % 5 + 1;
-                    if (duration>3) duration = 4;
+                    //duration = input[first_rythm_index1 + k*32 + i*16 + counter] % 4 + 1;
+                    duration = input[first_rythm_index1 + k*32 + i*16 + counter] % 6;     // per avere più 1/4
+                    if (duration < 1 || duration > 4) duration = 2;
+
                     //duration = 4; // test
-                    if (duration > 1) {
-                        note = simple_progression[i][input[first_note_index1 + k*32 + i*16 + counter] % num_of_chord_notes];
+                    if (duration > 2) {
+
+                        let min_dist = Tonal.Interval.get("8P");
+                        let min_pos = 8;
+                        for (let s=0; s<key.scale.length; s++) {
+                            let cur_dist = Tonal.Interval.get(Tonal.Interval.distance(old_note, key.scale[s] + "3"));
+                            //console.log("ciclo " + s +" cur_dist=" + cur_dist.name + " min_dist=" + min_dist.name);
+                            if (Math.abs(cur_dist.num) < Math.abs(min_dist.num) && cur_dist.num!==1 && simple_progression[i].indexOf(key.scale[s] + "3")!==-1) {
+                                min_dist = cur_dist;
+                                min_pos = s;
+                            }
+                        }
+                        note = Tonal.Note.transpose(old_note, min_dist);
+                        //console.log("fine for " + note + " " + simple_progression[i]);
+
+                        //note = simple_progression[i][input[first_note_index1 + k*32 + i*16 + counter] % num_of_chord_notes];
                         //note = Tonal.Note.transpose(note, "+8P");
                     } else {
-                        note = key.scale[input[first_note_index1 + k*32 + i*16 + counter] % 7] + "3";
+
+                        let min_dist = Tonal.Interval.get("8P");
+                        let min_pos = 8;
+                        for (let s=0; s<key.scale.length; s++) {
+                            let cur_dist = Tonal.Interval.get(Tonal.Interval.distance(old_note, key.scale[s] + "3"));
+                            //console.log("ciclo " + s +" cur_dist=" + cur_dist.name + " min_dist=" + min_dist.name);
+                            if (Math.abs(cur_dist.num) < Math.abs(min_dist.num) && cur_dist.num!==1 ) {
+                                min_dist = cur_dist;
+                                min_pos = s;
+                            }
+                        }
+                        note = Tonal.Note.transpose(old_note, min_dist);
+                        //console.log("fine for " + note);
+
+                        //note = key.scale[input[first_note_index1 + k*32 + i*16 + counter] % 7] + "3";
 
                         let prec_interval = Tonal.Interval.get(Tonal.Interval.distance(old_note, note)).num;
                         if (prec_interval > 4) {
