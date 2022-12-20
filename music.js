@@ -3,7 +3,7 @@ const Tonal = require('tonal');
 
 let sheet;
 const num_of_chord_notes = 3;
-const num_of_voices = 2;
+const num_of_voices = 1;
 const piano_options = {
     urls: {
         A0: "A0.mp3",
@@ -45,8 +45,10 @@ const t = Tone.Transport;
 const pan_left = new Tone.Panner(-0.5).toDestination();
 const pan_right = new Tone.Panner(0.5).toDestination();
 const piano_chord_sampler = new Tone.Sampler(piano_options).toDestination();
-const piano_left_sampler = new Tone.Sampler(piano_options).connect(pan_left);
-const piano_right_sampler = new Tone.Sampler(piano_options).connect(pan_right);
+//const piano_left_sampler = new Tone.Sampler(piano_options).connect(pan_left);
+//const piano_right_sampler = new Tone.Sampler(piano_options).connect(pan_right);
+const piano_left_sampler = new Tone.Sampler(piano_options).toDestination();
+const piano_right_sampler = new Tone.Sampler(piano_options).toDestination();
 
 // Create an inverted chord
 function invert(chord, inv_num) {
@@ -298,6 +300,7 @@ document.getElementById("done").addEventListener("click", function() {
         t.stop();
         writeMusic();
         initializeMusic();
+        t.start(t.now() + 0.6);
     });
 });
 document.getElementById("play").addEventListener("click", function() {
