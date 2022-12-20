@@ -42,8 +42,8 @@ const piano_options = {
 }
 
 const t = Tone.Transport;
-const pan_left = new Tone.Panner(-0.5).toDestination();
-const pan_right = new Tone.Panner(0.5).toDestination();
+//const pan_left = new Tone.Panner(-0.5).toDestination();
+//const pan_right = new Tone.Panner(0.5).toDestination();
 const piano_chord_sampler = new Tone.Sampler(piano_options).toDestination();
 //const piano_left_sampler = new Tone.Sampler(piano_options).connect(pan_left);
 //const piano_right_sampler = new Tone.Sampler(piano_options).connect(pan_right);
@@ -78,8 +78,9 @@ function writeMusic () {
 
     const first_note_index1 = chord_index + 1
     const first_rythm_index1 = first_note_index1 + measures*16
-    const first_note_index2 = first_rythm_index1 + measures*16
-    const first_rythm_index2 = first_note_index2 + measures*16
+
+    //const first_note_index2 = first_rythm_index1 + measures*16
+    //const first_rythm_index2 = first_note_index2 + measures*16
 
     const chromaticScale = Tonal.Range.chromatic(["C4", "B4"], {sharps : false, pitchClass : true});
 
@@ -326,7 +327,7 @@ function initializeMusic() {
 }
 
 document.getElementById("done").addEventListener("click", function() {
-    Tone.start().then(r => {
+    Tone.start().then(() => {
         t.stop();
         writeMusic();
         initializeMusic();
@@ -334,7 +335,7 @@ document.getElementById("done").addEventListener("click", function() {
     });
 });
 document.getElementById("play").addEventListener("click", function() {
-    Tone.start().then(r => {
+    Tone.start().then(() => {
         t.start();
     });
 });
