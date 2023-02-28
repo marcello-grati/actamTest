@@ -47,16 +47,13 @@ const t = Tone.Transport;
 const pan_left = new Tone.Panner().toDestination();
 //const pan_right = new Tone.Panner(0.5).toDestination();
 //const piano_chord_sampler = new Tone.Sampler(piano_options).toDestination();
-//const piano_left_sampler = new Tone.Sampler(piano_options).connect(pan_left);
+//const piano_melody_sampler = new Tone.Sampler(piano_options).connect(pan_left);
 //const piano_right_sampler = new Tone.Sampler(piano_options).connect(pan_right);
-//const piano_left_sampler = new Tone.Sampler(piano_options).toDestination();
+//const piano_melody_sampler = new Tone.Sampler(piano_options).toDestination();
 //const piano_right_sampler = new Tone.Sampler(piano_options).toDestination();
 
-
-//var buffer = t.context.createBuffer(2, t.context.sampleRate, t.context.sampleRate);
-
 const piano_chord_sampler = new Tone.Sampler(piano_options).connect(pan_left);
-const piano_left_sampler = new Tone.Sampler(piano_options).connect(pan_left);
+const piano_melody_sampler = new Tone.Sampler(piano_options).connect(pan_left);
 
 const audio = document.querySelector('audio');
 const dest  = Tone.context.createMediaStreamDestination();
@@ -285,19 +282,6 @@ function initializeMusic() {
     //t.bpm.value = sheet.bpm;
     console.log(t.get());
 
-    /*
-    loop = new Tone.Loop(time => {
-        for (let i=0; i<sheet.measures; i++)
-        {
-            for (let j=0; j<1; j++) {
-                //sampler.triggerAttackRelease(["C4", "E4", "G4"], "4n", time + (i * t.toSeconds("4n")))
-                sampler.triggerAttackRelease(sheet.progression[i][j], "4n", time + (i * t.toSeconds("4n")))
-            }
-        }
-    }, (sheet.measures + 1) * t.toSeconds("4n")).start(0);
-     */
-
-    //let part_array = [];
     let part_array = [];
 
     for (let i=0; i<sheet.measures; i++) {
@@ -313,12 +297,12 @@ function initializeMusic() {
         }
     }
 
-    let left_melody = sheet.melody[0];
-    let voiceLeftPart = new Tone.Part(((time, left_melody) => {
-        piano_left_sampler.triggerAttackRelease(left_melody.noteName, left_melody.duration, time, left_melody.velocity);
-    }), left_melody).start(0);
-    voiceLeftPart.loop = true;
-    voiceLeftPart.loopEnd = (sheet.measures) * t.toSeconds("1m");
+    let melody = sheet.melody[0];
+    let melodyPart = new Tone.Part(((time, melody) => {
+        piano_melody_sampler.triggerAttackRelease(melody.noteName, melody.duration, time, melody.velocity);
+    }), melody).start(0);
+    melodyPart.loop = true;
+    melodyPart.loopEnd = (sheet.measures) * t.toSeconds("1m");
     //pianoPart.humanize = true;
 
     let chordsPart = new Tone.Part(((time, part_array) => {
@@ -327,31 +311,21 @@ function initializeMusic() {
     chordsPart.loop = true;
     chordsPart.loopEnd = (sheet.measures) * t.toSeconds("1m");
     //pianoPart.humanize = true;
-
-    let right_melody = sheet.melody[1];
-    let voiceRightPart = new Tone.Part(((time, right_melody) => {
-        piano_right_sampler.triggerAttackRelease(right_melody.noteName, right_melody.duration, time, right_melody.velocity);
-    }), right_melody).start(0);
-    voiceRightPart.loop = true;
-    voiceRightPart.loopEnd = (sheet.measures) * t.toSeconds("1m");
-    //pianoPart.humanize = true;
-
-
 }
 
 function downloadMusic() {
 
     Tone.start().then(() => {
+
         console.log("download audio file");
-
         const chunks = [];
-
         t.stop();
 
         setTimeout(function() {
             recorder.start();
             t.start();
         }, 500);
+
         setTimeout(function(){
             if (!recording_interrupted) {
                 t.stop();
@@ -366,29 +340,16 @@ function downloadMusic() {
         recorder.onstop = () => {
 
             if (!recording_interrupted) {
+
                 let blob = new Blob(chunks, {type: recorder.mimeType});
-
-                /*
-                const rotto = Tone.context.createBuffer(
-                    1,
-                    chunks.length,
-                    Tone.context.sampleRate
-                );
-                console.log(chunks);
-                rotto.copyToChannel(chunks, 0)
-                const wav = bufferToWav(rotto);
-                const blob = new Blob([wav], { type: 'audio/wav' });
-
-                 */
                 const url = URL.createObjectURL(blob);
                 audio.src = URL.createObjectURL(blob);
                 const anchor = document.createElement('a');
                 document.body.appendChild(anchor);
                 anchor.style.display = 'none';
                 anchor.href = url;
-                anchor.download = 'audio.webm';
+                anchor.download = 'FaceTune.webm';
                 anchor.click();
-
                 URL.revokeObjectURL(url);
             }
         };
