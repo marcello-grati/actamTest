@@ -1,6 +1,8 @@
 const Tone = require('tone');
 const Tonal = require('tonal');
 
+let recording = false;
+let recording_interrupted = false;
 let sheet;
 const num_of_chord_notes = 3;
 const num_of_voices = 1;
@@ -42,13 +44,24 @@ const piano_options = {
 }
 
 const t = Tone.Transport;
-//const pan_left = new Tone.Panner(-0.5).toDestination();
+const pan_left = new Tone.Panner().toDestination();
 //const pan_right = new Tone.Panner(0.5).toDestination();
-const piano_chord_sampler = new Tone.Sampler(piano_options).toDestination();
+//const piano_chord_sampler = new Tone.Sampler(piano_options).toDestination();
 //const piano_left_sampler = new Tone.Sampler(piano_options).connect(pan_left);
 //const piano_right_sampler = new Tone.Sampler(piano_options).connect(pan_right);
-const piano_left_sampler = new Tone.Sampler(piano_options).toDestination();
-const piano_right_sampler = new Tone.Sampler(piano_options).toDestination();
+//const piano_left_sampler = new Tone.Sampler(piano_options).toDestination();
+//const piano_right_sampler = new Tone.Sampler(piano_options).toDestination();
+
+
+//var buffer = t.context.createBuffer(2, t.context.sampleRate, t.context.sampleRate);
+
+const piano_chord_sampler = new Tone.Sampler(piano_options).connect(pan_left);
+const piano_left_sampler = new Tone.Sampler(piano_options).connect(pan_left);
+
+const audio = document.querySelector('audio');
+const dest  = Tone.context.createMediaStreamDestination();
+pan_left.connect(dest);
+const recorder = new MediaRecorder(dest.stream, { mimeType: "audio/webm" });
 
 // Create an inverted chord
 function invert(chord, inv_num) {
@@ -326,24 +339,106 @@ function initializeMusic() {
 
 }
 
-document.getElementById("done").addEventListener("click", function() {
+function downloadMusic() {
+
     Tone.start().then(() => {
+        console.log("download audio file");
+
+        const chunks = [];
+
         t.stop();
-        writeMusic();
-        initializeMusic();
-        t.start(t.now() + 0.6);
+
+        setTimeout(function() {
+            recorder.start();
+            t.start();
+        }, 500);
+        setTimeout(function(){
+            if (!recording_interrupted) {
+                t.stop();
+                recorder.stop();
+                recording = false;
+            } else {
+                recording_interrupted = false;
+            }
+        }, 5000);
+
+        recorder.ondataavailable = evt => chunks.push(evt.data);
+        recorder.onstop = () => {
+
+            if (!recording_interrupted) {
+                let blob = new Blob(chunks, {type: recorder.mimeType});
+
+                /*
+                const rotto = Tone.context.createBuffer(
+                    1,
+                    chunks.length,
+                    Tone.context.sampleRate
+                );
+                console.log(chunks);
+                rotto.copyToChannel(chunks, 0)
+                const wav = bufferToWav(rotto);
+                const blob = new Blob([wav], { type: 'audio/wav' });
+
+                 */
+                const url = URL.createObjectURL(blob);
+                audio.src = URL.createObjectURL(blob);
+                const anchor = document.createElement('a');
+                document.body.appendChild(anchor);
+                anchor.style.display = 'none';
+                anchor.href = url;
+                anchor.download = 'audio.webm';
+                anchor.click();
+
+                URL.revokeObjectURL(url);
+            }
+        };
     });
+}
+
+document.getElementById("done").addEventListener("click", function() {
+
+    if (!recording) {
+        Tone.start().then(() => {
+            t.stop();
+            writeMusic();
+            initializeMusic();
+            t.start(t.now() + 0.6);
+        });
+    }
 });
+
 document.getElementById("play").addEventListener("click", function() {
-    Tone.start().then(() => {
-        t.start();
-    });
+
+    if (!recording) {
+        Tone.start().then(() => {
+            t.start();
+        });
+    }
 });
+
 document.getElementById("pause").addEventListener("click", function() {
 
-    t.pause();
+    if (!recording) {
+        t.pause();
+    }
 });
+
 document.getElementById("stop").addEventListener("click", function() {
 
-    t.stop();
+    if (!recording) {
+        t.stop();
+    }
+});
+
+document.getElementById("download").addEventListener("click", function() {
+
+    if (!recording && !recording_interrupted) {
+        recording = true;
+        downloadMusic();
+    } else {
+        recording_interrupted = true;
+        t.stop();
+        recorder.stop()
+        recording = false;
+    }
 });
