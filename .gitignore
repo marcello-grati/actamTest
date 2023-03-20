@@ -1,6 +1,5 @@
 # Project exclude paths
 /node_modules/
-bundle.js
 package-lock.json
 /.idea
 *.mp3
