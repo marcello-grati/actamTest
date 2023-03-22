@@ -1,6 +1,8 @@
 const Tone = require('tone');
 const Tonal = require('tonal');
 
+import {scream} from './test.js';
+
 let recording = false;
 let recording_interrupted = false;
 let sheet;
@@ -364,6 +366,7 @@ document.getElementById("done").addEventListener("click", function() {
             writeMusic();
             initializeMusic();
             t.start(t.now() + 0.6);
+            scream();
         });
     }
 });
